@@ -14,7 +14,9 @@ To reinforce, shift left-click to make a selection of raid blocks to reinforce
 
 Reinforcement Tiers:
 T1: Stone Reinforcement - Requires 1x Stone per Block & XP Cost
+
 T2: Iron Reinforcement - Requires 1x Iron Block per Block & XP Cost
+
 T3: Obsidian Reinforcement - Requires 1x Obsidian per Block & XP Cost
 
 These upgrades will be listed out in your chat for you to approve/deny to confirm your choices.
