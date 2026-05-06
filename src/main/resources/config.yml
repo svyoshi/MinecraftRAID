@@ -102,7 +102,6 @@ messages:
   prefix: "<gray>[<gold>Minecraft Raid</gold>]</gray> "
   blocked-material: "<red>This block cannot be used as a raid block.</red>"
   placed-raid-block: "<gray>Raid block placed (in your claim).</gray>"
-  damage-hp: "<yellow>HP: <white>{current}</white>/<white>{max}</white></yellow>"
   owner-offline-raid-damage: "<red>The claim owner must be online to damage this raid block.</red>"
   look-durability: "<gold>Reinf <yellow>{tier}</yellow></gold> <gray>|</gray> <yellow><white>{current}</white>/<white>{max}</white></yellow>"
   # Shown when HP is below max but reinforcement tier is 0 (no Reinf label)

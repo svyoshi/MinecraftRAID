@@ -19,8 +19,6 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -123,9 +121,5 @@ public final class RaidBlockListener implements Listener {
         blocks.replace(updated);
         float progress = 1f - (updated.currentHp() / (float) updated.maxHp());
         player.sendBlockDamage(block.getLocation(), Math.min(0.99f, Math.max(0.01f, progress)));
-        Map<String, String> ph = new HashMap<>();
-        ph.put("current", String.valueOf(updated.currentHp()));
-        ph.put("max", String.valueOf(updated.maxHp()));
-        Messages.actionBar(config, player, "damage-hp", ph);
     }
 }
