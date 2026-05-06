@@ -66,7 +66,9 @@ public final class RaidConfig {
     private String msgPrefix;
     private final Map<String, String> rawMessages = new HashMap<>();
 
-    private int reinforcementHpPerTier;
+    private int reinforcementTier1Hp;
+    private int reinforcementTier2Hp;
+    private int reinforcementTier3Hp;
     private Material reinforcementTier1Material;
     private Material reinforcementTier2Material;
     private Material reinforcementTier3Material;
@@ -158,7 +160,10 @@ public final class RaidConfig {
         lookDurabilityIntervalTicks = c.getInt("base-mode.look-durability-interval-ticks", 5);
         lookDurabilityMaxDistance = c.getDouble("base-mode.look-durability-max-distance", 2.0);
 
-        reinforcementHpPerTier = Math.max(1, c.getInt("reinforcement.hp-per-tier", 200));
+        int legacyHpPerTier = Math.max(1, c.getInt("reinforcement.hp-per-tier", 200));
+        reinforcementTier1Hp = Math.max(1, c.getInt("reinforcement.tier1-hp", legacyHpPerTier));
+        reinforcementTier2Hp = Math.max(1, c.getInt("reinforcement.tier2-hp", legacyHpPerTier));
+        reinforcementTier3Hp = Math.max(1, c.getInt("reinforcement.tier3-hp", legacyHpPerTier));
         reinforcementTier1Material = parseMat(c, "reinforcement.tier1-material", Material.STONE);
         reinforcementTier2Material = parseMat(c, "reinforcement.tier2-material", Material.IRON_BLOCK);
         reinforcementTier3Material = parseMat(c, "reinforcement.tier3-material", Material.OBSIDIAN);
@@ -193,8 +198,16 @@ public final class RaidConfig {
         return template;
     }
 
-    public int reinforcementHpPerTier() {
-        return reinforcementHpPerTier;
+    public int reinforcementTier1Hp() {
+        return reinforcementTier1Hp;
+    }
+
+    public int reinforcementTier2Hp() {
+        return reinforcementTier2Hp;
+    }
+
+    public int reinforcementTier3Hp() {
+        return reinforcementTier3Hp;
     }
 
     public Material reinforcementTier1Material() {

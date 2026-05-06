@@ -177,7 +177,6 @@ public final class ReinforcementManager {
         cancelPendingForPlayer(player.getUniqueId(), false);
         UUID sessionId = UUID.randomUUID();
         long deadline = System.currentTimeMillis() + cfg.reinforcementSessionTimeoutTicks() * 50L;
-        int hpSnap = cfg.reinforcementHpPerTier();
         ReinforcementSession session = new ReinforcementSession(
                 sessionId,
                 player.getUniqueId(),
@@ -187,7 +186,9 @@ public final class ReinforcementManager {
                 c2,
                 c3,
                 totalXp,
-                hpSnap,
+                cfg.reinforcementTier1Hp(),
+                cfg.reinforcementTier2Hp(),
+                cfg.reinforcementTier3Hp(),
                 deadline
         );
         sessions.put(sessionId, session);
@@ -290,9 +291,10 @@ public final class ReinforcementManager {
             return true;
         }
 
-        int hp = session.hpPerTierSnapshot();
-        for (RaidBlock rb : snap) {
-            blocks.replace(rb.withAppliedReinforcement(hp));
+        List<ReinforcementTarget> tgts = session.targets();
+        for (int i = 0; i < snap.size(); i++) {
+            int hp = hpSnapshotForFromTier(session, tgts.get(i).fromTier());
+            blocks.replace(snap.get(i).withAppliedReinforcement(hp));
         }
 
         playerSession.remove(player.getUniqueId());
@@ -316,6 +318,15 @@ public final class ReinforcementManager {
         stopParticleTaskIfIdle();
         Messages.send(config, player, "reinforce-denied");
         return true;
+    }
+
+    private static int hpSnapshotForFromTier(ReinforcementSession session, int fromTier) {
+        return switch (fromTier) {
+            case 0 -> session.tier1HpSnapshot();
+            case 1 -> session.tier2HpSnapshot();
+            case 2 -> session.tier3HpSnapshot();
+            default -> 1;
+        };
     }
 
     private static boolean removeItems(Player player, Material mat, int amount) {

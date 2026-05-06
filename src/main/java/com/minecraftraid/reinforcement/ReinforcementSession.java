@@ -12,6 +12,8 @@ public record ReinforcementSession(
         int countMatTier2,
         int countMatTier3,
         int totalXp,
-        int hpPerTierSnapshot,
+        int tier1HpSnapshot,
+        int tier2HpSnapshot,
+        int tier3HpSnapshot,
         long deadlineMillis
 ) {}
