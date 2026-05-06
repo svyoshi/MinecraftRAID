@@ -13,15 +13,16 @@ To repair, right click a damaged block with a replacement block available in you
 To reinforce, shift left-click to make a selection of raid blocks to reinforce
 
 Reinforcement Tiers:
-T1: Stone Reinforcement - Requires 1x Stone per Block & XP Cost
 
-T2: Iron Reinforcement - Requires 1x Iron Block per Block & XP Cost
+- T1: Stone Reinforcement - Requires 1x Stone per Block & XP Cost
 
-T3: Obsidian Reinforcement - Requires 1x Obsidian per Block & XP Cost
+- T2: Iron Reinforcement - Requires 1x Iron Block per Block & XP Cost
+
+- T3: Obsidian Reinforcement - Requires 1x Obsidian per Block & XP Cost
 
 These upgrades will be listed out in your chat for you to approve/deny to confirm your choices.
 
-The maximum health added to these blocks from each tier are configurable
+The maximum health added to these blocks from each tier are configurable. 
 You can also create custom maximum health for any block
 
 ------------------------------------------------------
@@ -32,7 +33,9 @@ Players must be ONLINE to be raided. This is currently vulnerable to PvP Logging
 It's probably not difficult to add a combattimer to allow blocks to continue to be destroyed.
 
 Depending on your configuration, how blocks durability are affected by tools are very specific. 
+
 This also applies to blasts from explosions (like TNT). If you're using a wooden pickaxe to try and break a players base, you shouldn't get very far, regardless of what their house is made out of.
+
 Container blocks cannot be opened by players foreign to a claim, until the container's durability is 0 - They should not break immediately, but CAN be broken like all other raid blocks after the DUR is 0.
 
 Once any raid blocks duration is "0", it will break naturally.
@@ -45,4 +48,5 @@ Reinforced blocks will always show they are reinforced, regardless of health, on
 ADMIN
 
 You can use /raid admin safezone/warzone claim/unclaim <radius> to create SafeZone or WarZones. 
+
 This is pretty much classic Factions logic. Players cannot interact with the world inside these claims.
