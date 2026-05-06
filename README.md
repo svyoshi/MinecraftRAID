@@ -3,7 +3,7 @@ this is pretty much Rust-styled raiding in Minecraft, minus the TC.
 
 THE BASICS 
 
-All players can claim land using /raid claim <radius>
+All players can claim land using /raid claim radius
 
 Inside their claim, blocks placed by the player will have Raid Durability.
 
@@ -50,6 +50,6 @@ Reinforced blocks will always show they are reinforced, regardless of health, on
 
 ADMIN
 
-You can use /raid admin safezone/warzone claim/unclaim <radius> to create SafeZone or WarZones. 
+You can use /raid admin safezone/warzone claim/unclaim radius to create SafeZone or WarZones. 
 
 This is pretty much classic Factions logic. Players cannot interact with the world inside these claims.
