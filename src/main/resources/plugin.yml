@@ -1,0 +1,32 @@
+name: MinecraftRaid
+main: com.minecraftraid.MinecraftRaidPlugin
+version: ${version}
+api-version: '26.1.2'
+description: Raid-style base blocks, repairs, persistence, and radius land claims.
+author: MinecraftRaid
+
+commands:
+  raid:
+    description: Minecraft Raid commands
+    usage: /<command> [subcommand]
+    permission: minecraftraid.command
+
+permissions:
+  minecraftraid.command:
+    description: Use /raid
+    default: true
+  minecraftraid.claim:
+    description: Create and remove land claims
+    default: true
+  minecraftraid.reinforce:
+    description: Cuboid reinforcement (shift-left with repair tool) and /raid reinforce confirm|deny
+    default: true
+  minecraftraid.admin:
+    description: Reload configuration
+    default: op
+  minecraftraid.admin.zones:
+    description: Create and remove SAFE_ZONE and WAR_ZONE admin circles
+    default: op
+  minecraftraid.admin.zone.bypass:
+    description: Modify blocks inside admin safe/war zones (build in hub/arena setups)
+    default: op

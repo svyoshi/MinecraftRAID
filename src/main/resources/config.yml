@@ -1,0 +1,146 @@
+# Minecraft Raid — configuration
+# Raid blocks: any block placed inside YOUR land claim gets HP automatically (no mode toggle).
+
+base-mode:
+  default-max-hp: 100
+  material-hp:
+    OBSIDIAN: 500
+    CRYING_OBSIDIAN: 500
+    ANCIENT_DEBRIS: 400
+    NETHERITE_BLOCK: 800
+  blocked-materials:
+    - BEDROCK
+    - BARRIER
+    - COMMAND_BLOCK
+    - STRUCTURE_VOID
+  default-mining-damage: 10
+  tool-mining-damage:
+    NETHERITE_PICKAXE: 25
+    DIAMOND_PICKAXE: 20
+    IRON_PICKAXE: 15
+    GOLDEN_PICKAXE: 12
+    STONE_PICKAXE: 10
+    WOODEN_PICKAXE: 8
+  # TNT and other explosions (not creepers) use this scale against raid HP
+  explosion-damage-scale: 80.0
+  cancel-piston-move: true
+  # Outsiders cannot damage raid HP while the block owner's account is offline
+  require-owner-online-for-damage: true
+  # Chat message when a raid block is placed in your claim
+  notify-on-place: false
+  # Action bar LOS durability (only when currentHp < maxHp)
+  look-durability-interval-ticks: 5
+  look-durability-max-distance: 2.0
+
+# Hold repair tool + right-click your damaged raid block: consumes 1 item matching that block for a full HP restore.
+repair:
+  tool-materials:
+    - GOLDEN_HOE
+
+# Shift + left-click two corners of owned raid blocks (same repair tool) to preview reinforcement; then click ACCEPT/DENY.
+# Each tier adds reinforcement.hp-per-tier to max and current HP (max 3 tiers). XP = sum per block (xp-base-per-block + xp-per-block-per-target-tier * tierAfter).
+reinforcement:
+  hp-per-tier: 200
+  tier1-material: STONE
+  tier2-material: IRON_BLOCK
+  tier3-material: OBSIDIAN
+  xp-base-per-block: 5
+  xp-per-block-per-target-tier: 2
+  max-blocks-per-selection: 512
+  session-timeout-ticks: 2400
+
+# Raid blocks: data/raid-blocks.db (SQLite, WAL). Claims: data/claims.yml. Legacy data/raid-state.yml auto-migrates once.
+persistence:
+  save-interval-ticks: 600
+
+claims:
+  min-radius: 5
+  max-radius: 128
+  max-per-player: 5
+  # Outsiders cannot place/break blocks in another player's claim
+  protect-blocks: true
+  # Outsiders cannot damage or interact with entities in another player's claim
+  protect-entities: true
+  allow-same-owner-overlap: true
+  block-other-overlap: true
+  # Client-side claim ring (sendBlockChange + particles); no server setBlock
+  border-visual-enabled: true
+  border-visual-interval-ticks: 5
+  # Player must be within this many blocks of the claim circle edge (|distToCenter - radius|)
+  border-band-blocks: 4
+  # Only draw circle samples within this horizontal distance of the player
+  border-view-radius: 40
+  # Samples around full circle (higher = smoother, more packets)
+  border-segments: 96
+  # Cap sendBlockChange calls per player per tick
+  border-max-updates-per-tick: 72
+  # In-world titles when crossing safe/war admin zones (MiniMessage; no chat prefix).
+  zone-titles-enabled: true
+  zone-title-fade-in-ticks: 10
+  zone-title-stay-ticks: 70
+  zone-title-fade-out-ticks: 20
+  zone-titles:
+    safe-zone:
+      enter-title: "<gold>Safe Zone</gold>"
+      enter-subtitle: "<gray>Combat disabled</gray>"
+      leave-title: "<yellow>Leaving safe zone</yellow>"
+      leave-subtitle: "<gray>You can take damage again</gray>"
+    war-zone:
+      enter-title: "<red>PvP Zone</red>"
+      enter-subtitle: "<gray>Place/break denied — combat enabled</gray>"
+      leave-title: "<gray>PvP zone cleared</gray>"
+      leave-subtitle: ""
+
+messages:
+  prefix: "<gray>[<gold>Minecraft Raid</gold>]</gray> "
+  blocked-material: "<red>This block cannot be used as a raid block.</red>"
+  placed-raid-block: "<gray>Raid block placed (in your claim).</gray>"
+  damage-hp: "<yellow>HP: <white>{current}</white>/<white>{max}</white></yellow>"
+  owner-offline-raid-damage: "<red>The claim owner must be online to damage this raid block.</red>"
+  look-durability: "<gold>Reinf <yellow>{tier}</yellow></gold> <gray>|</gray> <yellow><white>{current}</white>/<white>{max}</white></yellow>"
+  reinforce-corner1: "<yellow>Corner 1 set.</yellow> Shift–left-click another <bold>your</bold> raid block for corner 2."
+  reinforce-not-owned-raid: "<red>Must be one of your raid blocks in your claim.</red>"
+  reinforce-too-many-blocks: "<red>Cuboid is too large. Shrink selection (see reinforcement.max-blocks-per-selection).</red>"
+  reinforce-no-blocks: "<red>No blocks in this box can be reinforced (need your raid blocks below max tier, not breached).</red>"
+  reinforce-preview-tier1: "<gray>→ Tier I:</gray> <white>{count}x</white> <yellow>{material}</yellow>"
+  reinforce-preview-tier2: "<gray>→ Tier II:</gray> <white>{count}x</white> <yellow>{material}</yellow>"
+  reinforce-preview-tier3: "<gray>→ Tier III:</gray> <white>{count}x</white> <yellow>{material}</yellow>"
+  reinforce-preview-xp: "<gray>Experience cost:</gray> <white>{xp}</white> points total"
+  reinforce-accept-deny: "<green><click:run_command:'/raid reinforce confirm {session}'><bold>[ACCEPT]</bold></click></green> <gray>|</gray> <red><click:run_command:'/raid reinforce deny {session}'><bold>[DENY]</bold></click></red>"
+  reinforce-session-gone: "<red>No pending reinforcement session.</red>"
+  reinforce-session-expired: "<gray>That reinforcement proposal expired.</gray>"
+  reinforce-session-invalid: "<red>Blocks changed before confirm. Starting over.</red>"
+  reinforce-cancelled: "<gray>Cancelled.</gray>"
+  reinforce-not-enough-items: "<red>Not enough material in inventory.</red>"
+  reinforce-not-enough-xp: "<red>Not enough experience.</red>"
+  reinforce-success: "<green>Blocks reinforced!</green>"
+  reinforce-denied: "<gray>Reinforcement denied.</gray>"
+
+  repaired: "<green>Block fully repaired.</green>"
+  not-enough-material: "<red>You need one <white>{material}</white> in your inventory to repair this block.</red>"
+  wrong-tool: "<red>Hold the repair tool in your main hand (see config).</red>"
+  repair-not-itemable: "<red>This block type cannot be repaired with items.</red>"
+  claim-created: "<green>Claim created (radius <white>{radius}</white>).</green>"
+  claim-removed: "<green>Claim removed.</green>"
+  claim-too-many: "<red>You have reached the maximum number of claims.</red>"
+  claim-overlap: "<red>This claim overlaps another claim (including admin zones).</red>"
+  admin-zone-created: "<green>{type}</green> <gray>created (radius</gray> <white>{radius}</white><gray>).</gray>"
+  admin-zone-removed: "<gray>Admin zone removed (id</gray> <white>{id}</white><gray>).</gray>"
+  admin-zone-overlap: "<red>This zone overlaps an existing claim.</red>"
+  admin-zone-not-here: "<red>No matching admin zone at this location.</red>"
+  admin-zone-not-found: "<red>No matching admin zone with that id.</red>"
+  admin-zones-no-permission: "<red>No permission for admin zones.</red>"
+  admin-zones-unknown-type: "<red>Use safezone or warzone.</red>"
+  claim-invalid-radius: "<red>Radius must be between <white>{min}</white> and <white>{max}</white>.</red>"
+  no-claim-here: "<red>No claim here.</red>"
+  reload-done: "<green>Configuration reloaded.</green>"
+
+# Manual testing checklist:
+# - /raid claim 20, place blocks inside claim (no basemode): they become raid blocks; restart persists HP/breached.
+# - Outsider cannot place/break or hurt entities inside your claim (protect-* true).
+# - Creeper next to raid block: block not destroyed, HP unchanged.
+# - Fire/lava spread onto raid block: cancelled; enderman cannot take raid block.
+# - Raid chest depleted to 0: stays as block, outsider can open; repair restores lock.
+# - Repair: main hand = repair tool (e.g. golden hoe), inventory has 1+ same block as the raid block; right-click for full repair.
+# - Look at damaged raid block within 2 blocks: action bar shows durability.
+# - /raid reload: restarts autosave and look task.
