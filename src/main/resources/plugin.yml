@@ -28,8 +28,5 @@ permissions:
     description: Reload configuration
     default: op
   minecraftraid.admin.zones:
-    description: Create and remove SAFE_ZONE and WAR_ZONE admin circles
-    default: op
-  minecraftraid.admin.zone.bypass:
-    description: Modify blocks inside admin safe/war zones (build in hub/arena setups)
+    description: Create and remove SAFE_ZONE and WAR_ZONE admin circles; also allows modifying blocks inside those zones
     default: op

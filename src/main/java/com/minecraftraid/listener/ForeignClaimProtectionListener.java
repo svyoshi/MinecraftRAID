@@ -26,7 +26,8 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.vehicle.VehicleDestroyEvent;
 
 /**
- * Outsiders cannot modify blocks or harm/interact with entities inside another player's claim.
+ * Outsiders cannot modify blocks or harm/interact with non-player entities inside another player's claim.
+ * {@link Player} victims inside PLAYER circle claims remain damageable (PvP/raiding); SAFE/WAR zones use other rules.
  * Runs at {@link EventPriority#LOW} so {@link RaidBlockListener} at {@code HIGH} still handles raid HP first.
  */
 public final class ForeignClaimProtectionListener implements Listener {
@@ -48,7 +49,7 @@ public final class ForeignClaimProtectionListener implements Listener {
             return false;
         }
         if (c.isAdminZone()) {
-            return !player.hasPermission("minecraftraid.admin.zone.bypass");
+            return !player.hasPermission("minecraftraid.admin.zones");
         }
         return claims.isForeignClaim(player, loc);
     }
@@ -124,6 +125,11 @@ public final class ForeignClaimProtectionListener implements Listener {
         Entity victim = event.getEntity();
         LandClaim vc = claims.anyClaimAt(victim.getLocation());
         if (vc != null && vc.kind() == ClaimKind.WAR_ZONE) {
+            return;
+        }
+        /* PLAYER circles: blocks/interaction stay protected against outsiders; entity damage stays on for Players
+         * so non-members may still raid PvP the owner/trusted inside the claim. Animals & passives remain protected below. */
+        if (vc != null && vc.kind() == ClaimKind.PLAYER && victim instanceof Player) {
             return;
         }
         if (!config.protectClaimEntities()) {

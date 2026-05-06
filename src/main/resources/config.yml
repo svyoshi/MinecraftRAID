@@ -105,6 +105,8 @@ messages:
   damage-hp: "<yellow>HP: <white>{current}</white>/<white>{max}</white></yellow>"
   owner-offline-raid-damage: "<red>The claim owner must be online to damage this raid block.</red>"
   look-durability: "<gold>Reinf <yellow>{tier}</yellow></gold> <gray>|</gray> <yellow><white>{current}</white>/<white>{max}</white></yellow>"
+  # Shown when HP is below max but reinforcement tier is 0 (no Reinf label)
+  look-durability-no-reinf: "<yellow><white>{current}</white>/<white>{max}</white></yellow>"
   reinforce-corner1: "<yellow>Corner 1 set.</yellow> Shift–left-click another <bold>your</bold> raid block for corner 2."
   reinforce-not-owned-raid: "<red>Must be one of your raid blocks in your claim.</red>"
   reinforce-too-many-blocks: "<red>Cuboid is too large. Shrink selection (see reinforcement.max-blocks-per-selection).</red>"

@@ -38,8 +38,12 @@ public final class RaidLookDurabilityTask {
                 Map<String, String> ph = new HashMap<>();
                 ph.put("current", String.valueOf(rb.currentHp()));
                 ph.put("max", String.valueOf(rb.maxHp()));
-                ph.put("tier", tierRoman(rb.reinforcementTier()));
-                Messages.actionBar(config, player, "look-durability", ph);
+                if (rb.reinforcementTier() > 0) {
+                    ph.put("tier", tierRoman(rb.reinforcementTier()));
+                    Messages.actionBar(config, player, "look-durability", ph);
+                } else {
+                    Messages.actionBar(config, player, "look-durability-no-reinf", ph);
+                }
             }
         }, interval, interval);
     }

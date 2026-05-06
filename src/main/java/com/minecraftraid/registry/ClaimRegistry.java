@@ -1,5 +1,6 @@
 package com.minecraftraid.registry;
 
+import com.minecraftraid.model.ClaimKind;
 import com.minecraftraid.model.LandClaim;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -91,6 +92,22 @@ public final class ClaimRegistry {
         int z = loc.getBlockZ();
         for (LandClaim c : byId.values()) {
             if (c.containsXZ(w, x, z)) {
+                return c;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Any {@link ClaimKind#SAFE_ZONE} covering this column, or null. Unlike {@link #anyClaimAt}, this scans
+     * specifically for safe zones so overlapping PLAYER (or other) claims do not hide the safe zone.
+     */
+    public LandClaim safeZoneAt(Location loc) {
+        UUID w = loc.getWorld().getUID();
+        int x = loc.getBlockX();
+        int z = loc.getBlockZ();
+        for (LandClaim c : byId.values()) {
+            if (c.kind() == ClaimKind.SAFE_ZONE && c.containsXZ(w, x, z)) {
                 return c;
             }
         }
