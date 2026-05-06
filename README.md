@@ -3,13 +3,17 @@ this is pretty much Rust-styled raiding in Minecraft, minus the TC.
 
 THE BASICS 
 
-All players can claim land using /raid claim <radius>
+All players can claim land using /raid claim radius
+
 Inside their claim, blocks placed by the player will have Raid Durability.
+
 All other "natural" blocks are currently invincible from damage by other players, this may need to be changed depending.
+
 
 Raidable blocks can be repaired or reinforced with the Repair Tool (default: Golden Hoe) 
 
 To repair, right click a damaged block with a replacement block available in your inventory
+
 To reinforce, shift left-click to make a selection of raid blocks to reinforce
 
 Reinforcement Tiers:
@@ -47,6 +51,6 @@ Reinforced blocks will always show they are reinforced, regardless of health, on
 
 ADMIN
 
-You can use /raid admin safezone/warzone claim/unclaim <radius> to create SafeZone or WarZones. 
+You can use /raid admin safezone/warzone claim/unclaim radius to create SafeZone or WarZones. 
 
 This is pretty much classic Factions logic. Players cannot interact with the world inside these claims.
