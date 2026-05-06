@@ -91,11 +91,11 @@ public final class ReinforcementManager {
         }
         RaidConfig cfg = config;
         Location loc = block.getLocation();
-        if (!claims.isOwnerLocation(player, loc)) {
+        if (!claims.isClaimMember(player, loc)) {
             return;
         }
         RaidBlock rb = blocks.get(block.getWorld(), block.getX(), block.getY(), block.getZ());
-        if (rb == null || rb.breached() || !player.getUniqueId().equals(rb.ownerUuid())) {
+        if (rb == null || rb.breached()) {
             Messages.send(config, player, "reinforce-not-owned-raid");
             return;
         }
@@ -144,11 +144,8 @@ public final class ReinforcementManager {
                     if (b == null || b.breached()) {
                         continue;
                     }
-                    if (!player.getUniqueId().equals(b.ownerUuid())) {
-                        continue;
-                    }
                     Location L = new Location(world, x, y, z);
-                    if (!claims.isOwnerLocation(player, L)) {
+                    if (!claims.isClaimMember(player, L)) {
                         continue;
                     }
                     int tier = b.reinforcementTier();
@@ -268,7 +265,7 @@ public final class ReinforcementManager {
         for (ReinforcementTarget t : session.targets()) {
             RaidBlock rb = blocks.get(world, t.x(), t.y(), t.z());
             if (rb == null || rb.breached() || rb.reinforcementTier() != t.fromTier()
-                    || !rb.ownerUuid().equals(player.getUniqueId())) {
+                    || !claims.isClaimMember(player, new Location(world, t.x(), t.y(), t.z()))) {
                 cancelPendingForPlayer(player.getUniqueId(), false);
                 sessions.remove(sessionId);
                 Messages.send(config, player, "reinforce-session-invalid");

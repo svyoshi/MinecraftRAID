@@ -2,9 +2,11 @@ package com.minecraftraid.listener;
 
 import com.minecraftraid.MinecraftRaidPlugin;
 import com.minecraftraid.config.RaidConfig;
+import com.minecraftraid.model.LandClaim;
 import com.minecraftraid.model.RaidBlock;
 import com.minecraftraid.registry.RaidBlockRegistry;
 import com.minecraftraid.util.Messages;
+import com.minecraftraid.util.RaidChestLinkage;
 import com.minecraftraid.util.RaidMaterials;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -19,9 +21,11 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * Raid blocks: any block placed inside the placer's own land claim becomes a raid block automatically.
+ * Raid blocks: any block placed inside a PLAYER claim where the placer is a member becomes a raid block.
+ * Stored {@link RaidBlock#ownerUuid()} is always the claim owner (trusted helpers do not retain separate ownership).
  * <p>Future: log placements via CoreProtect (or similar) API so players can pay to rollback a destroyed base.</p>
  */
 public final class RaidBlockListener implements Listener {
@@ -40,7 +44,7 @@ public final class RaidBlockListener implements Listener {
     public void onPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
         Block placed = event.getBlockPlaced();
-        if (!plugin.getClaimRegistry().isOwnerLocation(player, placed.getLocation())) {
+        if (!plugin.getClaimRegistry().isClaimMember(player, placed.getLocation())) {
             return;
         }
         Material type = placed.getType();
@@ -49,18 +53,23 @@ public final class RaidBlockListener implements Listener {
             Messages.send(config, player, "blocked-material");
             return;
         }
+        LandClaim covering = plugin.getClaimRegistry().anyClaimAt(placed.getLocation());
+        UUID raidOwnerUuid = (covering != null && covering.kind().isPlayerOwned())
+                ? covering.ownerUuid()
+                : player.getUniqueId();
         int maxHp = config.maxHpFor(type);
         RaidBlock rb = new RaidBlock(
                 placed.getWorld().getUID(),
                 placed.getX(),
                 placed.getY(),
                 placed.getZ(),
-                player.getUniqueId(),
+                raidOwnerUuid,
                 maxHp,
                 maxHp,
                 type
         );
         blocks.put(rb);
+        RaidChestLinkage.scheduleTryMerge(plugin, blocks, placed);
         if (config.notifyOnRaidPlace()) {
             Messages.send(config, player, "placed-raid-block");
         }
@@ -78,7 +87,7 @@ public final class RaidBlockListener implements Listener {
             blocks.remove(block.getWorld(), block.getX(), block.getY(), block.getZ());
             return;
         }
-        if (player.getUniqueId().equals(rb.ownerUuid())) {
+        if (plugin.getClaimRegistry().isClaimMember(player, block.getLocation())) {
             blocks.remove(block.getWorld(), block.getX(), block.getY(), block.getZ());
             return;
         }

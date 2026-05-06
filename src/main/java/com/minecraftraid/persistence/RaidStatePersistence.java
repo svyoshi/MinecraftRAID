@@ -5,6 +5,7 @@ import com.minecraftraid.model.LandClaim;
 import com.minecraftraid.model.RaidBlock;
 import com.minecraftraid.registry.ClaimRegistry;
 import com.minecraftraid.registry.RaidBlockRegistry;
+import com.minecraftraid.util.RaidChestLinkage;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -17,7 +18,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -85,6 +90,7 @@ public final class RaidStatePersistence {
         try {
             if (!dbEmpty) {
                 loadBlocksFromSql(blocks);
+                RaidChestLinkage.consolidateDoubleChestRaidBlocks(plugin, blocks);
             } else if (hasBlocksSection(legacyStateFile)) {
                 YamlConfiguration legacyYaml = YamlConfiguration.loadConfiguration(legacyStateFile);
                 migrateBlocksFromLegacyYamlSections(blocks, legacyYaml);
@@ -142,8 +148,30 @@ public final class RaidStatePersistence {
             if (id == null || Bukkit.getWorld(worldId) == null) {
                 continue;
             }
-            claims.add(new LandClaim(id, worldId, cx, cz, radius, owner, kind));
+            Set<UUID> trusted = parseTrustedUuids(sec);
+            if (!kind.isPlayerOwned()) {
+                trusted = Set.of();
+            }
+            claims.add(new LandClaim(id, worldId, cx, cz, radius, owner, kind, trusted));
         }
+    }
+
+    private static Set<UUID> parseTrustedUuids(ConfigurationSection sec) {
+        List<String> raw = sec.getStringList("trusted");
+        if (raw == null || raw.isEmpty()) {
+            return Set.of();
+        }
+        Set<UUID> out = new HashSet<>();
+        for (String line : raw) {
+            if (line == null || line.isBlank()) {
+                continue;
+            }
+            try {
+                out.add(UUID.fromString(line.trim()));
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        return out;
     }
 
     private void loadBlocksFromSql(RaidBlockRegistry blocks) throws SQLException {
@@ -250,6 +278,14 @@ public final class RaidStatePersistence {
             s.set("radius", c.radiusBlocks());
             s.set("owner", c.ownerUuid().toString());
             s.set("kind", c.kind().name());
+            if (c.kind().isPlayerOwned() && !c.trustedUuids().isEmpty()) {
+                List<String> tr = new ArrayList<>();
+                for (UUID u : c.trustedUuids()) {
+                    tr.add(u.toString());
+                }
+                tr.sort(String::compareTo);
+                s.set("trusted", tr);
+            }
         }
         File tmp = new File(dataDir, "claims.yml.tmp");
         try {

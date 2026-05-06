@@ -46,6 +46,11 @@ public record RaidBlock(
         return new RaidBlock(worldId, x, y, z, ownerUuid, maxHp, currentHp, material, value, reinforcementTier);
     }
 
+    /** Canonical world position stored in SQLite and used for explosion dedupe identity. */
+    public RaidBlock withPosition(int nx, int ny, int nz) {
+        return new RaidBlock(worldId, nx, ny, nz, ownerUuid, maxHp, currentHp, material, breached, reinforcementTier);
+    }
+
     /** One tier up; adds {@code hpPerTier} to max and current HP (current capped). No-op if breached or max tier. */
     public RaidBlock withAppliedReinforcement(int hpPerTier) {
         if (breached || reinforcementTier >= MAX_REINFORCEMENT_TIER || hpPerTier <= 0) {

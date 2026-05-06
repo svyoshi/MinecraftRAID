@@ -13,8 +13,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-import java.util.UUID;
-
 /**
  * Blocks opening raid storage containers for non-claim-owners until breached (HP depleted).
  */
@@ -56,7 +54,6 @@ public final class ContainerAccessListener implements Listener {
             return true;
         }
         LandClaim claim = claims.claimAt(block.getLocation());
-        UUID claimOwner = claim != null ? claim.ownerUuid() : rb.ownerUuid();
-        return player.getUniqueId().equals(claimOwner);
+        return claim != null && claim.isMember(player.getUniqueId());
     }
 }

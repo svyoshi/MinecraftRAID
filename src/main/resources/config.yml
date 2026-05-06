@@ -1,5 +1,8 @@
 # Minecraft Raid Configuration
 # Raid blocks: any block placed inside YOUR land claim gets HP automatically
+#
+# Trusted members can place and break raid blocks, these blocks belong to the claim owner
+# meaning you can safely remove members from your claim without worrying about losing your raid blocks.
 
 base-mode:
   default-max-hp: 100
@@ -137,6 +140,14 @@ messages:
   admin-zones-unknown-type: "<red>Use safezone or warzone.</red>"
   claim-invalid-radius: "<red>Radius must be between <white>{min}</white> and <white>{max}</white>.</red>"
   no-claim-here: "<red>No claim here.</red>"
+  trust-no-claim-here: "<red>Stand in your player claim to manage trusted members.</red>"
+  trust-not-owner: "<red>Only the claim owner can change trusted members.</red>"
+  trust-unknown-player: "<red>Could not resolve that player (use exact name, UUID, or they must have joined before).</red>"
+  trust-self: "<gray>You are already the owner of this claim.</gray>"
+  trust-already: "<gray>That player is already trusted here.</gray>"
+  trust-not-trusted: "<gray>That player is not trusted on this claim.</gray>"
+  trust-added: "<green>Trusted <white>{player}</white> on this claim.</green>"
+  trust-removed: "<gray>Removed trust for <white>{player}</white> on this claim.</gray>"
   reload-done: "<green>Configuration reloaded.</green>"
 
   # End of file

@@ -54,7 +54,7 @@ public final class ClaimBorderVisualTask {
             case SAFE_ZONE -> BorderStyle.SAFE;
             case WAR_ZONE -> BorderStyle.WAR;
             case PLAYER ->
-                    claim.ownerUuid().equals(player.getUniqueId()) ? BorderStyle.OWN : BorderStyle.FOREIGN;
+                    claim.isMember(player.getUniqueId()) ? BorderStyle.OWN : BorderStyle.FOREIGN;
         };
     }
 

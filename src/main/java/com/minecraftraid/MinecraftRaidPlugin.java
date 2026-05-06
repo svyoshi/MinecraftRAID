@@ -58,7 +58,7 @@ public final class MinecraftRaidPlugin extends JavaPlugin implements Listener {
                 new ExplosionListener(raidConfig, blockRegistry, claimRegistry, getServer()), this);
         getServer().getPluginManager().registerEvents(new RaidBlockEnvironmentListener(blockRegistry), this);
         getServer().getPluginManager().registerEvents(new PistonListener(raidConfig, blockRegistry), this);
-        getServer().getPluginManager().registerEvents(new RepairListener(raidConfig, blockRegistry), this);
+        getServer().getPluginManager().registerEvents(new RepairListener(raidConfig, claimRegistry, blockRegistry), this);
         getServer().getPluginManager().registerEvents(new ReinforcementListener(raidConfig, reinforcementManager), this);
         getServer().getPluginManager().registerEvents(new ContainerAccessListener(claimRegistry, blockRegistry), this);
         getServer().getPluginManager().registerEvents(this, this);

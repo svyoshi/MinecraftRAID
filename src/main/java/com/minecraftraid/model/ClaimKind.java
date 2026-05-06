@@ -4,5 +4,9 @@ package com.minecraftraid.model;
 public enum ClaimKind {
     PLAYER,
     SAFE_ZONE,
-    WAR_ZONE
+    WAR_ZONE;
+
+    public boolean isPlayerOwned() {
+        return this == PLAYER;
+    }
 }

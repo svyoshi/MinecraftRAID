@@ -11,8 +11,10 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.OfflinePlayer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,6 +43,8 @@ public final class RaidCommand implements CommandExecutor, TabCompleter {
         return switch (sub) {
             case "claim" -> handleClaim(sender, args);
             case "unclaim" -> handleUnclaim(sender, args);
+            case "trust" -> handleTrust(sender, args);
+            case "untrust" -> handleUntrust(sender, args);
             case "list" -> handleList(sender);
             case "reload" -> handleReload(sender);
             case "reinforce" -> handleReinforce(sender, args);
@@ -53,7 +57,8 @@ public final class RaidCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendUsage(CommandSender sender) {
-        sender.sendMessage("Usage: /raid claim <radius> | unclaim [here|<id>] | list | reinforce <confirm|deny> <session> | "
+        sender.sendMessage("Usage: /raid claim <radius> | unclaim [here|<id>] | trust <player> | untrust <player> | list | "
+                + "reinforce <confirm|deny> <session> | "
                 + "admin <safezone|warzone> <claim|unclaim> … | reload");
     }
 
@@ -120,7 +125,7 @@ public final class RaidCommand implements CommandExecutor, TabCompleter {
         String mode = args.length >= 2 ? args[1].toLowerCase(Locale.ROOT) : "here";
         if (mode.equals("here")) {
             LandClaim at = plugin.getClaimRegistry().anyClaimAt(player.getLocation());
-            if (at == null || !at.ownerUuid().equals(player.getUniqueId())) {
+            if (at == null || !plugin.getClaimRegistry().claimOwnedBy(player, player.getLocation())) {
                 Messages.send(config, player, "no-claim-here");
                 return true;
             }
@@ -129,12 +134,113 @@ public final class RaidCommand implements CommandExecutor, TabCompleter {
             return true;
         }
         LandClaim byId = plugin.getClaimRegistry().remove(mode);
-        if (byId == null || !byId.ownerUuid().equals(player.getUniqueId())) {
+        if (byId == null || !byId.kind().isPlayerOwned() || !byId.ownerUuid().equals(player.getUniqueId())) {
             Messages.send(config, player, "no-claim-here");
             return true;
         }
         Messages.send(config, player, "claim-removed");
         return true;
+    }
+
+    private boolean handleTrust(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Players only.");
+            return true;
+        }
+        if (!player.hasPermission("minecraftraid.trust")) {
+            sender.sendMessage("No permission.");
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage("Usage: /raid trust <player>");
+            return true;
+        }
+        LandClaim at = plugin.getClaimRegistry().anyClaimAt(player.getLocation());
+        if (at == null || at.isAdminZone()) {
+            Messages.send(config, player, "trust-no-claim-here");
+            return true;
+        }
+        if (!plugin.getClaimRegistry().claimOwnedBy(player, player.getLocation())) {
+            Messages.send(config, player, "trust-not-owner");
+            return true;
+        }
+        UUID targetId = resolvePlayerUuid(plugin, args[1]);
+        if (targetId == null) {
+            Messages.send(config, player, "trust-unknown-player");
+            return true;
+        }
+        if (targetId.equals(player.getUniqueId())) {
+            Messages.send(config, player, "trust-self");
+            return true;
+        }
+        if (at.isTrusted(targetId)) {
+            Messages.send(config, player, "trust-already");
+            return true;
+        }
+        plugin.getClaimRegistry().replace(at.withTrustAdded(targetId));
+        Map<String, String> ph = new HashMap<>();
+        ph.put("player", args[1]);
+        Messages.send(config, player, "trust-added", ph);
+        return true;
+    }
+
+    private boolean handleUntrust(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("Players only.");
+            return true;
+        }
+        if (!player.hasPermission("minecraftraid.trust")) {
+            sender.sendMessage("No permission.");
+            return true;
+        }
+        if (args.length < 2) {
+            sender.sendMessage("Usage: /raid untrust <player>");
+            return true;
+        }
+        LandClaim at = plugin.getClaimRegistry().anyClaimAt(player.getLocation());
+        if (at == null || at.isAdminZone()) {
+            Messages.send(config, player, "trust-no-claim-here");
+            return true;
+        }
+        if (!plugin.getClaimRegistry().claimOwnedBy(player, player.getLocation())) {
+            Messages.send(config, player, "trust-not-owner");
+            return true;
+        }
+        UUID targetId = resolvePlayerUuid(plugin, args[1]);
+        if (targetId == null) {
+            Messages.send(config, player, "trust-unknown-player");
+            return true;
+        }
+        if (!at.isTrusted(targetId)) {
+            Messages.send(config, player, "trust-not-trusted");
+            return true;
+        }
+        plugin.getClaimRegistry().replace(at.withTrustRemoved(targetId));
+        Map<String, String> ph = new HashMap<>();
+        ph.put("player", args[1]);
+        Messages.send(config, player, "trust-removed", ph);
+        return true;
+    }
+
+    private static UUID resolvePlayerUuid(MinecraftRaidPlugin plugin, String name) {
+        if (name == null || name.isBlank()) {
+            return null;
+        }
+        String trimmed = name.trim();
+        try {
+            return UUID.fromString(trimmed);
+        } catch (IllegalArgumentException ignored) {
+        }
+        Player online = plugin.getServer().getPlayerExact(trimmed);
+        if (online != null) {
+            return online.getUniqueId();
+        }
+        @SuppressWarnings("deprecation")
+        OfflinePlayer off = plugin.getServer().getOfflinePlayer(trimmed);
+        if (off.hasPlayedBefore() || off.isOnline()) {
+            return off.getUniqueId();
+        }
+        return null;
     }
 
     private boolean handleList(CommandSender sender) {
@@ -300,7 +406,7 @@ public final class RaidCommand implements CommandExecutor, TabCompleter {
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
             String p = args[0].toLowerCase(Locale.ROOT);
-            for (String s : List.of("claim", "unclaim", "list", "reinforce", "admin", "reload")) {
+            for (String s : List.of("claim", "unclaim", "trust", "untrust", "list", "reinforce", "admin", "reload")) {
                 if (s.startsWith(p)) {
                     out.add(s);
                 }
@@ -343,6 +449,16 @@ public final class RaidCommand implements CommandExecutor, TabCompleter {
             if ("deny".startsWith(p)) {
                 out.add("deny");
             }
+        }
+        if (args.length == 2 && ("trust".equalsIgnoreCase(args[0]) || "untrust".equalsIgnoreCase(args[0]))) {
+            String prefix = args[1].toLowerCase(Locale.ROOT);
+            for (Player online : sender.getServer().getOnlinePlayers()) {
+                String name = online.getName();
+                if (prefix.isEmpty() || name.toLowerCase(Locale.ROOT).startsWith(prefix)) {
+                    out.add(name);
+                }
+            }
+            Collections.sort(out);
         }
         return out;
     }

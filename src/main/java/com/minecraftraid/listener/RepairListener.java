@@ -2,6 +2,7 @@ package com.minecraftraid.listener;
 
 import com.minecraftraid.config.RaidConfig;
 import com.minecraftraid.model.RaidBlock;
+import com.minecraftraid.registry.ClaimRegistry;
 import com.minecraftraid.registry.RaidBlockRegistry;
 import com.minecraftraid.util.Messages;
 import org.bukkit.Material;
@@ -22,14 +23,17 @@ import java.util.Map;
 public final class RepairListener implements Listener {
 
     private final RaidConfig config;
+    private final ClaimRegistry claims;
     private final RaidBlockRegistry blocks;
 
-    public RepairListener(RaidConfig config, RaidBlockRegistry blocks) {
+    public RepairListener(RaidConfig config, ClaimRegistry claims, RaidBlockRegistry blocks) {
         this.config = config;
+        this.claims = claims;
         this.blocks = blocks;
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+    /** After {@link ContainerAccessListener} ({@link EventPriority#HIGH}) so outsiders are blocked before we handle repair. */
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.NORMAL)
     public void onInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
@@ -47,7 +51,7 @@ public final class RepairListener implements Listener {
             return;
         }
         Player player = event.getPlayer();
-        if (!player.getUniqueId().equals(rb.ownerUuid())) {
+        if (!claims.isClaimMember(player, block.getLocation())) {
             return;
         }
         if (rb.currentHp() >= rb.maxHp()) {
@@ -55,8 +59,7 @@ public final class RepairListener implements Listener {
         }
         ItemStack hand = player.getInventory().getItemInMainHand();
         if (!config.repairToolMaterials().contains(hand.getType())) {
-            Messages.send(config, player, "wrong-tool");
-            event.setCancelled(true);
+            // Damaged raid block: opening chests/using blocks still works unless holding repair tool
             return;
         }
         Material blockMat = rb.material();

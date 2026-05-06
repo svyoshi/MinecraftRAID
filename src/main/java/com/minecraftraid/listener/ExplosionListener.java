@@ -15,7 +15,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 public final class ExplosionListener implements Listener {
 
@@ -57,6 +59,7 @@ public final class ExplosionListener implements Listener {
     }
 
     private void handleDamage(Iterator<Block> iterator, float yield) {
+        Set<String> seenCanonRaid = new HashSet<>();
         while (iterator.hasNext()) {
             Block block = iterator.next();
             LandClaim cz = claims.anyClaimAt(block.getLocation());
@@ -66,6 +69,10 @@ public final class ExplosionListener implements Listener {
             }
             RaidBlock rb = blocks.get(block.getWorld(), block.getX(), block.getY(), block.getZ());
             if (rb == null) {
+                continue;
+            }
+            if (!seenCanonRaid.add(rb.positionKey())) {
+                iterator.remove();
                 continue;
             }
             if (config.requireOwnerOnlineForRaidDamage() && server.getPlayer(rb.ownerUuid()) == null) {

@@ -39,6 +39,10 @@ public final class ClaimRegistry {
         byId.put(claim.id(), claim);
     }
 
+    public void replace(LandClaim updated) {
+        byId.put(updated.id(), updated);
+    }
+
     public LandClaim remove(String id) {
         return byId.remove(id);
     }
@@ -63,12 +67,18 @@ public final class ClaimRegistry {
         return list;
     }
 
+    /**
+     * A claim covering {@code loc} where this player counts as owner or trusted (PLAYER claims).
+     */
     public LandClaim claimContaining(Player player, Location loc) {
         UUID w = loc.getWorld().getUID();
         int x = loc.getBlockX();
         int z = loc.getBlockZ();
         for (LandClaim c : byId.values()) {
-            if (c.ownerUuid().equals(player.getUniqueId()) && c.containsXZ(w, x, z)) {
+            if (!c.containsXZ(w, x, z)) {
+                continue;
+            }
+            if (c.isMember(player.getUniqueId())) {
                 return c;
             }
         }
@@ -92,15 +102,31 @@ public final class ClaimRegistry {
         return anyClaimAt(loc);
     }
 
-    /** True if {@code loc} is inside a claim owned by someone other than {@code player}. */
-    public boolean isForeignClaim(Player player, Location loc) {
+    /** PLAYER claim covering {@code loc} where {@code player} is owner or trusted. */
+    public boolean isClaimMember(Player player, Location loc) {
         LandClaim c = anyClaimAt(loc);
-        return c != null && !c.ownerUuid().equals(player.getUniqueId());
+        return c != null && c.isMember(player.getUniqueId());
     }
 
+    /** True iff {@code loc} sits in a PLAYER claim owned by {@code player} (trusted does not qualify). */
+    public boolean claimOwnedBy(Player player, Location loc) {
+        LandClaim c = anyClaimAt(loc);
+        return c != null && c.kind().isPlayerOwned() && c.ownerUuid().equals(player.getUniqueId());
+    }
+
+    /** @deprecated prefer {@link #isClaimMember} */
+    @Deprecated
     public boolean isOwnerLocation(Player player, Location loc) {
-        LandClaim at = anyClaimAt(loc);
-        return at != null && at.ownerUuid().equals(player.getUniqueId());
+        return isClaimMember(player, loc);
+    }
+
+    /** True if {@code loc} is inside a claim where {@code player} is not treated as owning/trusted member. */
+    public boolean isForeignClaim(Player player, Location loc) {
+        LandClaim c = anyClaimAt(loc);
+        if (c == null) {
+            return false;
+        }
+        return !c.isMember(player.getUniqueId());
     }
 
     /** Any circle overlap with another claim (different id), any kind/owner. Used for strict zoning. */
