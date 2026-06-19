@@ -106,6 +106,10 @@ public final class RaidCommand implements CommandExecutor, TabCompleter {
             Messages.send(config, player, "claim-overlap");
             return true;
         }
+        if (plugin.getClaimRegionGuard().blocksClaim(claim, player.getWorld(), player.getLocation().getBlockY())) {
+            Messages.send(config, player, "claim-worldguard-region");
+            return true;
+        }
         plugin.getClaimRegistry().add(claim);
         Map<String, String> ph = new HashMap<>();
         ph.put("radius", String.valueOf(radius));

@@ -89,8 +89,8 @@ public final class RaidBlockListener implements Listener {
             blocks.remove(block.getWorld(), block.getX(), block.getY(), block.getZ());
             return;
         }
-        if (config.requireOwnerOnlineForRaidDamage()
-                && plugin.getServer().getPlayer(rb.ownerUuid()) == null) {
+        if (!plugin.getDisconnectRaidGraceTracker().canOutsidersDamageOwner(
+                rb.ownerUuid(), plugin.getServer(), config)) {
             event.setCancelled(true);
             Messages.send(config, player, "owner-offline-raid-damage");
             return;

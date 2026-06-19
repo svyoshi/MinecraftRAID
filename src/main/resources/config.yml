@@ -27,8 +27,10 @@ base-mode:
   # TNT and other explosions (not creepers) use this scale against raid HP
   explosion-damage-scale: 80.0
   cancel-piston-move: true
-  # Outsiders cannot damage raid HP while the block owner's account is offline
+  # Outsiders cannot damage raid HP while the claim owner is offline (after disconnect grace expires)
   require-owner-online-for-damage: true
+  # Minutes raid blocks stay damageable after the claim owner disconnects (0 = instant offline protection)
+  disconnect-raid-grace-minutes: 10
   # Chat message when a raid block is placed in your claim
   notify-on-place: false
   # Action bar LOS durability (only when currentHp < maxHp)
@@ -60,6 +62,12 @@ reinforcement:
 persistence:
   save-interval-ticks: 600
 
+integrations:
+  worldguard:
+    enabled: true
+    # Block size when scanning the claim circle interior (smaller = stricter, more checks)
+    claim-check-step-blocks: 8
+
 claims:
   min-radius: 5
   max-radius: 128
@@ -74,7 +82,7 @@ claims:
   border-visual-enabled: true
   border-visual-interval-ticks: 5
   # Player must be within this many blocks of the claim circle edge (|distToCenter - radius|)
-  border-band-blocks: 4
+  border-band-blocks: 10
   # Only draw circle samples within this horizontal distance of the player
   border-view-radius: 100
   # Samples around full circle (higher = smoother, more packets)
@@ -132,6 +140,7 @@ messages:
   claim-removed: "<green>Claim removed.</green>"
   claim-too-many: "<red>You have reached the maximum number of claims.</red>"
   claim-overlap: "<red>This claim overlaps another claim (including admin zones).</red>"
+  claim-worldguard-region: "<red>This claim overlaps a WorldGuard protected region.</red>"
   admin-zone-created: "<green>{type}</green> <gray>created (radius</gray> <white>{radius}</white><gray>).</gray>"
   admin-zone-removed: "<gray>Admin zone removed (id</gray> <white>{id}</white><gray>).</gray>"
   admin-zone-overlap: "<red>This zone overlaps an existing claim.</red>"

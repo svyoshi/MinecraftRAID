@@ -23,6 +23,7 @@ public final class RaidConfig {
     private double explosionDamageScale;
     private boolean cancelPistonMove;
     private boolean requireOwnerOnlineForRaidDamage;
+    private int disconnectRaidGraceMinutes;
 
     private final Set<Material> repairToolMaterials = EnumSet.noneOf(Material.class);
 
@@ -77,6 +78,9 @@ public final class RaidConfig {
     private int reinforcementMaxBlocksPerSelection;
     private int reinforcementSessionTimeoutTicks;
 
+    private boolean worldGuardIntegrationEnabled;
+    private int worldGuardClaimCheckStepBlocks;
+
     public void reload(JavaPlugin plugin) {
         plugin.saveDefaultConfig();
         plugin.reloadConfig();
@@ -117,6 +121,7 @@ public final class RaidConfig {
         explosionDamageScale = c.getDouble("base-mode.explosion-damage-scale", 80.0);
         cancelPistonMove = c.getBoolean("base-mode.cancel-piston-move", true);
         requireOwnerOnlineForRaidDamage = c.getBoolean("base-mode.require-owner-online-for-damage", true);
+        disconnectRaidGraceMinutes = Math.max(0, c.getInt("base-mode.disconnect-raid-grace-minutes", 10));
 
         repairToolMaterials.clear();
         for (String s : c.getStringList("repair.tool-materials")) {
@@ -171,6 +176,9 @@ public final class RaidConfig {
         reinforcementXpPerBlockPerTargetTier = Math.max(0, c.getInt("reinforcement.xp-per-block-per-target-tier", 2));
         reinforcementMaxBlocksPerSelection = Math.max(1, c.getInt("reinforcement.max-blocks-per-selection", 512));
         reinforcementSessionTimeoutTicks = Math.max(200, c.getInt("reinforcement.session-timeout-ticks", 2400));
+
+        worldGuardIntegrationEnabled = c.getBoolean("integrations.worldguard.enabled", true);
+        worldGuardClaimCheckStepBlocks = Math.max(1, c.getInt("integrations.worldguard.claim-check-step-blocks", 8));
 
         ConfigurationSection msg = c.getConfigurationSection("messages");
         rawMessages.clear();
@@ -260,6 +268,18 @@ public final class RaidConfig {
 
     public boolean requireOwnerOnlineForRaidDamage() {
         return requireOwnerOnlineForRaidDamage;
+    }
+
+    public int disconnectRaidGraceMinutes() {
+        return disconnectRaidGraceMinutes;
+    }
+
+    public boolean worldGuardIntegrationEnabled() {
+        return worldGuardIntegrationEnabled;
+    }
+
+    public int worldGuardClaimCheckStepBlocks() {
+        return worldGuardClaimCheckStepBlocks;
     }
 
     public Set<Material> repairToolMaterials() {

@@ -4,6 +4,7 @@ version: ${version}
 api-version: '26.1.2'
 description: Raid-style base blocks, repairs, persistence, and radius land claims.
 author: MinecraftRaid
+softdepend: [WorldGuard]
 
 commands:
   raid:

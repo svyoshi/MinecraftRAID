@@ -4,6 +4,7 @@ import com.minecraftraid.config.RaidConfig;
 import com.minecraftraid.model.LandClaim;
 import com.minecraftraid.model.RaidBlock;
 import com.minecraftraid.registry.ClaimRegistry;
+import com.minecraftraid.registry.DisconnectRaidGraceTracker;
 import com.minecraftraid.registry.RaidBlockRegistry;
 import com.minecraftraid.util.RaidMaterials;
 import org.bukkit.Server;
@@ -25,12 +26,19 @@ public final class ExplosionListener implements Listener {
     private final RaidBlockRegistry blocks;
     private final ClaimRegistry claims;
     private final Server server;
+    private final DisconnectRaidGraceTracker graceTracker;
 
-    public ExplosionListener(RaidConfig config, RaidBlockRegistry blocks, ClaimRegistry claims, Server server) {
+    public ExplosionListener(
+            RaidConfig config,
+            RaidBlockRegistry blocks,
+            ClaimRegistry claims,
+            Server server,
+            DisconnectRaidGraceTracker graceTracker) {
         this.config = config;
         this.blocks = blocks;
         this.claims = claims;
         this.server = server;
+        this.graceTracker = graceTracker;
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
@@ -75,7 +83,7 @@ public final class ExplosionListener implements Listener {
                 iterator.remove();
                 continue;
             }
-            if (config.requireOwnerOnlineForRaidDamage() && server.getPlayer(rb.ownerUuid()) == null) {
+            if (!graceTracker.canOutsidersDamageOwner(rb.ownerUuid(), server, config)) {
                 iterator.remove();
                 continue;
             }

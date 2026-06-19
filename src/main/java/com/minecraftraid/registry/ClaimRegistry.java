@@ -58,6 +58,10 @@ public final class ClaimRegistry {
         return n;
     }
 
+    public boolean ownsAnyClaim(UUID owner) {
+        return countForOwner(owner) > 0;
+    }
+
     public List<LandClaim> ownedBy(UUID owner) {
         List<LandClaim> list = new ArrayList<>();
         for (LandClaim c : byId.values()) {

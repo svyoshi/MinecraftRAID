@@ -14,8 +14,12 @@ import com.minecraftraid.listener.RepairListener;
 import com.minecraftraid.listener.SafeZoneProtectionListener;
 import com.minecraftraid.model.LandClaim;
 import com.minecraftraid.model.RaidBlock;
+import com.minecraftraid.integration.ClaimRegionGuard;
+import com.minecraftraid.integration.ClaimRegionGuardFactory;
+import com.minecraftraid.integration.NoOpClaimRegionGuard;
 import com.minecraftraid.persistence.RaidStatePersistence;
 import com.minecraftraid.registry.ClaimRegistry;
+import com.minecraftraid.registry.DisconnectRaidGraceTracker;
 import com.minecraftraid.reinforcement.ReinforcementManager;
 import com.minecraftraid.registry.RaidBlockRegistry;
 import com.minecraftraid.task.AutosaveTask;
@@ -25,27 +29,32 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public final class MinecraftRaidPlugin extends JavaPlugin implements Listener {
 
     private final RaidConfig raidConfig = new RaidConfig();
     private final RaidBlockRegistry blockRegistry = new RaidBlockRegistry();
     private final ClaimRegistry claimRegistry = new ClaimRegistry();
+    private final DisconnectRaidGraceTracker disconnectRaidGraceTracker = new DisconnectRaidGraceTracker();
     private RaidStatePersistence persistence;
     private final AutosaveTask autosaveTask = new AutosaveTask();
     private final RaidLookDurabilityTask lookDurabilityTask = new RaidLookDurabilityTask();
     private ClaimBorderVisualTask claimBorderVisualTask;
     private ReinforcementManager reinforcementManager;
+    private ClaimRegionGuard claimRegionGuard = NoOpClaimRegionGuard.INSTANCE;
 
     @Override
     public void onEnable() {
         persistence = new RaidStatePersistence(this);
         raidConfig.reload(this);
+        claimRegionGuard = ClaimRegionGuardFactory.create(this, raidConfig);
         persistence.load(blockRegistry, claimRegistry);
         reinforcementManager = new ReinforcementManager(this, raidConfig, blockRegistry, claimRegistry);
         getServer().getPluginManager().registerEvents(
@@ -55,7 +64,7 @@ public final class MinecraftRaidPlugin extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new SafeZoneProtectionListener(claimRegistry), this);
         getServer().getPluginManager().registerEvents(new AdminZoneTitleListener(raidConfig, claimRegistry), this);
         getServer().getPluginManager().registerEvents(
-                new ExplosionListener(raidConfig, blockRegistry, claimRegistry, getServer()), this);
+                new ExplosionListener(raidConfig, blockRegistry, claimRegistry, getServer(), disconnectRaidGraceTracker), this);
         getServer().getPluginManager().registerEvents(new RaidBlockEnvironmentListener(blockRegistry), this);
         getServer().getPluginManager().registerEvents(new PistonListener(raidConfig, blockRegistry), this);
         getServer().getPluginManager().registerEvents(new RepairListener(raidConfig, claimRegistry, blockRegistry), this);
@@ -75,7 +84,8 @@ public final class MinecraftRaidPlugin extends JavaPlugin implements Listener {
         claimBorderVisualTask = new ClaimBorderVisualTask(this, raidConfig, claimRegistry);
         claimBorderVisualTask.start();
         getLogger().info("Minecraft Raid enabled. Raid blocks loaded: " + blockRegistry.size()
-                + ", claims: " + claimRegistry.all().size());
+                + ", claims: " + claimRegistry.all().size()
+                + ", WorldGuard claim guard: " + (claimRegionGuard instanceof NoOpClaimRegionGuard ? "off" : "on"));
     }
 
     @Override
@@ -95,6 +105,7 @@ public final class MinecraftRaidPlugin extends JavaPlugin implements Listener {
 
     public void reloadRaidConfig() {
         raidConfig.reload(this);
+        claimRegionGuard = ClaimRegionGuardFactory.create(this, raidConfig);
         if (reinforcementManager != null) {
             reinforcementManager.onReload();
         }
@@ -111,6 +122,7 @@ public final class MinecraftRaidPlugin extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
+        handleOwnerDisconnect(event.getPlayer().getUniqueId());
         if (reinforcementManager != null) {
             reinforcementManager.onPlayerQuit(event.getPlayer());
         }
@@ -120,6 +132,17 @@ public final class MinecraftRaidPlugin extends JavaPlugin implements Listener {
         List<RaidBlock> b = new ArrayList<>(blockRegistry.snapshot());
         List<LandClaim> c = new ArrayList<>(claimRegistry.all());
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> persistence.save(b, c));
+    }
+
+    @EventHandler
+    public void onKick(PlayerKickEvent event) {
+        handleOwnerDisconnect(event.getPlayer().getUniqueId());
+    }
+
+    private void handleOwnerDisconnect(UUID playerId) {
+        if (claimRegistry.ownsAnyClaim(playerId)) {
+            disconnectRaidGraceTracker.onOwnerDisconnect(playerId, raidConfig.disconnectRaidGraceMinutes());
+        }
     }
 
     public RaidConfig getRaidConfig() {
@@ -132,5 +155,13 @@ public final class MinecraftRaidPlugin extends JavaPlugin implements Listener {
 
     public ClaimRegistry getClaimRegistry() {
         return claimRegistry;
+    }
+
+    public DisconnectRaidGraceTracker getDisconnectRaidGraceTracker() {
+        return disconnectRaidGraceTracker;
+    }
+
+    public ClaimRegionGuard getClaimRegionGuard() {
+        return claimRegionGuard;
     }
 }
